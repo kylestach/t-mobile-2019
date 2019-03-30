@@ -47,7 +47,6 @@ def pull_latest_task(my_uuid):
     global current_schedule
     global tasks
     worker = [w for w in workers if str(w.uuid) == str(my_uuid)]
-    print(worker, my_uuid)
     if not worker:
         response = jsonify(success=False)
         response.headers.add('Access-Control-Allow-Origin', '*')
@@ -139,6 +138,28 @@ def update_schedule():
     global current_schedule
     current_schedule = optimizer.optimize_schedule(
         tasks, workers, time.time() // 60)
+
+
+@app.route("/activate_rep", methods=['POST'])
+def activate_rep():
+    global workers
+    uuid = request.get_json()['uuid']
+    [w for w in workers if w.uuid == uuid][0].active = True
+    update_schedule()
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route("/deactivate_rep", methods=['POST'])
+def deactivate_rep():
+    global workers
+    uuid = request.get_json()['uuid']
+    [w for w in workers if w.uuid == uuid][0].active = False
+    update_schedule()
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 sched = BackgroundScheduler(daemon=True)

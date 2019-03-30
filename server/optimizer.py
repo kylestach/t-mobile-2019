@@ -78,6 +78,7 @@ class Worker:
         self.uuid = new_global_uuid()
         self.constraint_props["employee_uuid"] = [self.uuid]
         self.current_task = None
+        self.active = False
 
     def score(self, task_name):
         return self.task_proficiencies[task_name] if task_name in self.task_proficiencies else self.default_proficiency
@@ -96,7 +97,8 @@ class Worker:
             "default_proficiency": self.default_proficiency,
             "task_proficiencies": self.task_proficiencies,
             "constraint_props": self.constraint_props,
-            "uuid": self.uuid
+            "uuid": self.uuid,
+            "active": self.active,
         }
 
 
@@ -151,6 +153,7 @@ class Schedule:
 
 
 def optimize_schedule(tasks, reps, now_time):
+    reps = [rep for rep in reps if rep.active]
     default_assignments = {r: [] for r in reps}
     for r, t in zip(itertools.cycle(reps), tasks):
         default_assignments[r].append(t)
