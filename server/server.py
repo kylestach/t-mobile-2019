@@ -12,15 +12,18 @@ current_schedule = optimizer.Schedule({})
 alpha = 1e-2
 
 task_times = {
-    'coverage': 30,
-    'problem': 40,
-    'upgrade': 50,
-    'add': 60,
-    'sim': 5,
-    'features': 15,
-    'accessories': 20,
-    'help': 20,
-    'other': 20,
+    'accessory': 10,
+    'activate_service': 20,
+    'activate_prepaid_service': 15,
+    'upgrade': 45,
+    'sim': 10,
+    'bill_pay': 5,
+    'insurance': 30,
+    'just_looking': 20,
+    'return': 10,
+    'service_account': 30,
+    'service_device': 60,
+    't_mobile_tuesdays': 1,
 }
 
 
@@ -191,6 +194,38 @@ def deactivate_rep():
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
+tasks.append(optimizer.Task(
+    "sim",
+    "Will",
+    "6666666666",
+    5,
+    time.time() // 60,
+    None,
+    constraints={"language": "english"},
+))
+tasks.append(optimizer.Task(
+    "service_device",
+    "Ananth",
+    "1111111111",
+    60,
+    None,
+    time.time() // 60 + 15,
+    constraints={"language": "english"},
+))
+
+workers.append(optimizer.Worker(
+    "Naman",
+    time.time() // 60
+))
+workers.append(optimizer.Worker(
+    "Kyle",
+    time.time() // 60
+))
+for w in workers:
+    w.active = True
+update_schedule()
 
 
 sched = BackgroundScheduler(daemon=True)
