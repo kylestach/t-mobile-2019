@@ -30,12 +30,16 @@ def add_worker():
         time.time() // 60
     ))
     update_schedule()
-    return jsonify(success=True)
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/get_workers", methods=['GET'])
 def get_workers():
-    return jsonify([w.serialize() for w in workers])
+    response = jsonify([w.serialize() for w in workers])
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/pull_task/<my_uuid>", methods=['GET'])
@@ -45,14 +49,18 @@ def pull_latest_task(my_uuid):
     worker = [w for w in workers if str(w.uuid) == str(my_uuid)]
     print(worker, my_uuid)
     if not worker:
-        return jsonify(success=False)
+        response = jsonify(success=False)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
     worker = worker[0]
     task = current_schedule.rep_assignments[worker][0]
     tasks = [t for t in tasks if str(t.uuid) != str(task.uuid)]
     worker.current_task = task
     worker.current_task_end = time.time() // 60 + task.time_to_complete
     update_schedule()
-    return jsonify(task.serialize())
+    response = jsonify(task.serialize())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/schedule_appointment", methods=['POST'])
@@ -67,7 +75,9 @@ def schedule_appointment():
         constraints={"language": request.get_json()['language']},
     ))
     update_schedule()
-    return jsonify(success=True)
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/add_task", methods=['POST'])
@@ -82,17 +92,23 @@ def add_task():
         constraints={"language": request.get_json()['language']},
     ))
     update_schedule()
-    return jsonify(success=True)
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/get_appointments", methods=['GET'])
 def get_appointments():
-    return jsonify([t.serialize() for t in tasks if t.online_time is not None])
+    response = jsonify([t.serialize() for t in tasks if t.online_time is not None])
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/get_tasks", methods=['GET'])
 def get_tasks():
-    return jsonify([t.serialize() for t in tasks])
+    response = jsonify([t.serialize() for t in tasks])
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @app.route("/check_in", methods=['POST'])
@@ -100,12 +116,16 @@ def checkin_appointment():
     uuid = request.get_json()['uuid']
     filtered = [t for t in tasks if str(t.uuid) == str(uuid)]
     filtered.checkin_time = time.time() // 60
-    return jsonify(success=True)
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route("/schedule", methods=['GET'])
 def get_schedule():
     global current_schedule
-    return jsonify(current_schedule.serialize())
+    response = jsonify(current_schedule.serialize())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 def update_schedule():
