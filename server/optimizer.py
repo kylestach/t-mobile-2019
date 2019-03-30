@@ -11,7 +11,7 @@ def new_global_uuid():
     global global_uuid
     result = global_uuid
     global_uuid += 1
-    return result
+    return str(result)
 
 class Task:
     def __init__(self,
@@ -76,6 +76,7 @@ class Worker:
         self.constraint_props = constraint_props
         self.constraint_props["name"] = [self.name]
         self.uuid = new_global_uuid()
+        self.current_task = None
 
     def score(self, task_name):
         return self.task_proficiencies[task_name] if task_name in self.task_proficiencies else self.default_proficiency
@@ -92,7 +93,8 @@ class Worker:
             "current_task_end": self.current_task_end,
             "default_proficiency": self.default_proficiency,
             "task_proficiencies": self.task_proficiencies,
-            "constraint_props": self.constraint_props
+            "constraint_props": self.constraint_props,
+            "uuid": self.uuid
         }
 
 

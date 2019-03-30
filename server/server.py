@@ -24,6 +24,7 @@ task_times = {
 
 @app.route("/add_worker", methods=['POST'])
 def add_worker():
+    global workers
     workers.append(optimizer.Worker(
         request.get_json()['name'],
         time.time() // 60
@@ -36,8 +37,26 @@ def get_workers():
     return jsonify([w.serialize() for w in workers])
 
 
+@app.route("/pull_task/<my_uuid>", methods=['GET'])
+def pull_latest_task(my_uuid):
+    global current_schedule
+    global tasks
+    worker = [w for w in workers if str(w.uuid) == str(my_uuid)]
+    print(worker, my_uuid)
+    if not worker:
+        return jsonify(success=False)
+    worker = worker[0]
+    task = current_schedule.rep_assignments[worker][0]
+    tasks = [t for t in tasks if str(t.uuid) != str(task.uuid)]
+    worker.current_task = task
+    worker.current_task_end = time.time() // 60 + task.time_to_complete
+    update_schedule()
+    return jsonify(task.serialize())
+
+
 @app.route("/schedule_appointment", methods=['POST'])
 def schedule_appointment():
+    global tasks
     tasks.append(optimizer.Task(
         request.get_json()['task_name'],
         request.get_json()['customer_name'],
@@ -51,6 +70,7 @@ def schedule_appointment():
 
 @app.route("/add_task", methods=['POST'])
 def add_task():
+    global tasks
     tasks.append(optimizer.Task(
         request.get_json()['task_name'],
         request.get_json()['customer_name'],
