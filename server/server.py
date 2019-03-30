@@ -142,7 +142,7 @@ def add_task():
         time.time() // 60,
         None,
         constraints=constraints,
-        recommmended=parseRecuests(request.get_json()['speech']),
+        recommmended=parseRecuests(request.get_json()['speech']) if 'speech' in request.get_json() and request.get_json['speech'],
     ))
     update_schedule()
     response = jsonify(success=True)
