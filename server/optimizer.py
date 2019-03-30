@@ -91,7 +91,7 @@ class Worker:
         return {
             "name": self.name,
             "current_task_end": self.current_task_end,
-            "current_task": self.current_task.serialize(),
+            "current_task": self.current_task.serialize() or None,
             "default_proficiency": self.default_proficiency,
             "task_proficiencies": self.task_proficiencies,
             "constraint_props": self.constraint_props,
