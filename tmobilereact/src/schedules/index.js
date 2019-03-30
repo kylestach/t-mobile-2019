@@ -36,7 +36,7 @@
 export class Employee {
     id;
     name;
-
+    active;
     currentTaskEnd;
     currentTaskEndRaw;
 
@@ -51,7 +51,7 @@ export class Employee {
             obj.currentTaskEnd = null;
             obj.currentTaskEndRaw = null;
         }
-
+        obj.active = raw.active;
         return obj;
     }
 
@@ -138,7 +138,22 @@ export async function getEmployees() {
 
     return data.map(Employee.fromJSON);
 }
-
+export async function activateEmployee(e) {
+  const response = await fetch('http://13.68.142.20/activate_rep',{
+    method:"POST",body:JSON.stringify({uuid:e.id})
+  });
+  if (!response.ok) {
+      throw new Error("HTTP error, status = " + response.status);
+  }
+}
+export async function deactivateEmployee(e) {
+  const response = await fetch('http://13.68.142.20/deactivate_rep',{
+    method:"POST",body:JSON.stringify({uuid:e.id})
+  });
+  if (!response.ok) {
+      throw new Error("HTTP error, status = " + response.status);
+  }
+}
 export async function getSchedule() {
     const employees = await getEmployees();
 
