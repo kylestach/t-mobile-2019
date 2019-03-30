@@ -41,6 +41,7 @@ export class Employee {
     active;
     currentTaskEnd;
     currentTaskEndRaw;
+    currentTask;
 
     static fromJSON(raw) {
         const obj = new Employee();
@@ -54,6 +55,12 @@ export class Employee {
             obj.currentTaskEndRaw = null;
         }
         obj.active = raw.active;
+        if (raw.current_task) {
+            obj.currentTask = ScheduleItem.fromJSON(raw.current_task);
+        } else {
+            obj.currentTask = null;
+        }
+
         return obj;
     }
 
@@ -104,12 +111,28 @@ export class Employee {
     },
  */
 
+/*
+checkin_time	25899427
+constraints	{…}
+    language	english
+customer_name	Will
+name	sim
+online_time	null
+phone	6666666666
+time_to_complete	5
+uuid	0
+ */
+
 export class ScheduleItem {
     id;
-    title;
-    description;
+    title; // customer name
+    description; // type of fix
     start;
     end;
+    phone;
+
+    onlineTime;
+    constraints;
 
     employeeId;
 
@@ -121,6 +144,14 @@ export class ScheduleItem {
         obj.start = new Date(raw.start * 60 * 1000);
         obj.end = new Date(raw.end * 60 * 1000);
         obj.employeeId = raw.employee_id;
+        obj.phone = raw.phone;
+        obj.constraints = raw.constraints;
+
+        if (raw.online_time) {
+            obj.onlineTime = new Date(raw.online_time * 60 * 1000);
+        } else {
+            obj.onlineTime = null;
+        }
 
         return obj;
     }
@@ -263,4 +294,14 @@ export async function getAppointment() {
     const data = await response.json();
 
     return data.map(Appointment.fromJSON);
+}
+
+export async function dequeueTask(employeeId) {
+    const response = await fetch(`http://13.68.142.20/pull_task/${employeeId}`);
+    if (!response.ok) {
+        throw new Error("HTTP error, status = " + response.status);
+    }
+    const data = await response.json();
+
+    return data.map(ScheduleItem.fromJSON);
 }
