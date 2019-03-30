@@ -26,14 +26,14 @@ class Task:
         self.time_to_complete = time_to_complete
         self.checkin_time = checkin_time
         self.online_time = online_time
-        self.constraints = constraints
+        self.constraints = constraints.copy()
         self.uuid = new_global_uuid()
 
     def eval_cost(self, worker, time, now_time):
         zeta = None
         target_time = None
         if not worker.matches_hard_constraints(self.constraints):
-            return float('inf')
+            return 1e10
 
         if self.online_time is not None:
             # If it's scheduled before the appointment, it's a failure
@@ -59,6 +59,7 @@ class Task:
             "checkin_time": self.checkin_time,
             "online_time": self.online_time,
             "uuid": self.uuid,
+            "constraints": self.constraints,
         }
 
     def __repr__(self):
@@ -73,9 +74,9 @@ class Worker:
         self.current_task_end = current_task_end
         self.default_proficiency = default_proficiency
         self.task_proficiencies = task_proficiencies
-        self.constraint_props = constraint_props
-        self.constraint_props["name"] = [self.name]
+        self.constraint_props = constraint_props.copy()
         self.uuid = new_global_uuid()
+        self.constraint_props["employee_uuid"] = [self.uuid]
         self.current_task = None
 
     def score(self, task_name):
@@ -111,7 +112,8 @@ class Schedule:
     def eval_cost(self, now_time):
         cost = 0
         for worker in self.rep_assignments:
-            schedule_time = max(worker.current_task_end, now_time)
+            schedule_begin = max(worker.current_task_end, now_time)
+            schedule_time = schedule_begin
             tasks = self.rep_assignments[worker]
             for task in tasks:
                 # If this task is online, delay it until the proper start time.
@@ -119,7 +121,7 @@ class Schedule:
                     schedule_time = task.online_time
                 cost += task.eval_cost(worker, schedule_time, now_time)
                 schedule_time += task.time_to_complete / worker.score(task.task_name)
-            cost += schedule_time ** 2
+            cost += (schedule_time - schedule_begin) ** 2
         return cost
 
     def gen_neighbor(self, num_moves):
@@ -179,6 +181,7 @@ def optimize_schedule(tasks, reps, now_time):
             best_so_far = schedule
             best_cost = new_cost
 
+    print("Optimization finished with cost %s" % best_cost)
     return best_so_far
 
 def main():

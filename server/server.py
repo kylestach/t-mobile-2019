@@ -83,13 +83,16 @@ def schedule_appointment():
 @app.route("/add_task", methods=['POST'])
 def add_task():
     global tasks
+    constraints = {"language": request.get_json()['language']}
+    if "employee" in request.get_json():
+        constraints["employee_uuid"] = request.get_json()["employee"]
     tasks.append(optimizer.Task(
         request.get_json()['task_name'],
         request.get_json()['customer_name'],
         task_times[request.get_json()['task_name']],
         time.time() // 60,
         None,
-        constraints={"language": request.get_json()['language']},
+        constraints=constraints,
     ))
     update_schedule()
     response = jsonify(success=True)
@@ -99,7 +102,9 @@ def add_task():
 
 @app.route("/get_appointments", methods=['GET'])
 def get_appointments():
-    response = jsonify([t.serialize() for t in tasks if t.online_time is not None])
+    response = jsonify([
+        t.serialize() for t in sorted(tasks, key=lambda t: t.online_time)
+        if t.online_time is not None])
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
