@@ -4,9 +4,16 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^3.9.3",
+    "@material-ui/icons": "^3.0.2",
+    "classnames": "latest",
+    "moment": "^2.24.0",
+    "prop-types": "latest",
     "react": "^16.8.6",
+    "react-big-calendar": "^0.20.4",
     "react-dom": "^16.8.6",
-    "react-scripts": "2.1.8"
+    "react-input-mask": "^2.0.4",
+    "react-scripts": "2.1.8",
+    "react-text-mask": "^5.4.3"
   },
   "scripts": {
     "start": "react-scripts start",
