@@ -15,8 +15,11 @@ import BottomNavigation from "@material-ui/core/BottomNavigation";
 import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
 import RestoreIcon from '@material-ui/icons/Restore';
 import CurrentSchedule from "./CurrentSchedule";
-import {getEmployees, getSchedule} from "./schedules";
+import {getEmployees, getSchedule, ScheduleItem} from "./schedules";
 import AddToQueue from "./AddToQueue";
+import EmployeeSelf from "./EmployeeSelf";
+import CustomerIdle from "./CustomerIdle";
+import CustomerServing from "./CustomerServing";
 import EmployeeManagement from "./EmployeeManagement";
 
 const styles = theme => ({
@@ -483,8 +486,7 @@ const appStyles = theme => ({
         display: 'flex',
         flexDirection: 'column',
     },
-    navigator: {
-    },
+    navigator: {},
     container: {
         flexGrow: 1,
     },
@@ -537,43 +539,116 @@ const events = [
 ];
 
 const employees = [
-    { userId: 1, displayName: 'Board room' },
-    { userId: 2, displayName: 'Training room' },
-    { userId: 3, displayName: 'Meeting room 1' },
-    { userId: 4, displayName: 'Meeting room 2' },
+    {userId: 1, displayName: 'Board room'},
+    {userId: 2, displayName: 'Training room'},
+    {userId: 3, displayName: 'Meeting room 1'},
+    {userId: 4, displayName: 'Meeting room 2'},
 ];
 
 const tabs = [
     {name: 'Add Queue', icon: () => (<RestoreIcon/>), content: () => (<AddToQueue/>)},
-    {name: 'Current Queue', icon: () => (<RestoreIcon/>), content: () => (<Typography>I am current queue</Typography>)},
-    {name: 'Current Schedule', icon: () => (<RestoreIcon/>), content: () => (<CurrentSchedule events={events} employees={employees}/>)},
-    {name: 'Customer', icon: () => (<RestoreIcon/>), content: () => (<EmployeeManagement/>)},
-    {name: 'Me', icon: () => (<RestoreIcon/>), content: () => (<Typography>I am me</Typography>)},
+    {name: 'Current Queue', icon: () => (<RestoreIcon/>), content: () => (<EmployeeManagement/>)},
+    {
+        name: 'Current Schedule',
+        icon: () => (<RestoreIcon/>),
+        content: () => (<CurrentSchedule events={events} employees={employees}/>)
+    },
+    {
+        name: 'Customer', icon: () => (<RestoreIcon/>), content: (comp) => {
+
+            if (comp.state.activeTask === null) {
+                return <CustomerIdle
+                    onTaskChange={comp.handleTaskChange}
+                    employeeSchedule={comp.activeEmployeeSchedule}
+                    employee={comp.activeEmployee}/>;
+            }  else {
+                return <CustomerServing
+                    onTaskChange={comp.handleTaskChange}
+                    currentTask={comp.state.activeTask}
+                    employee={comp.activeEmployee}/>;
+            }
+        }
+    },
+    {name: 'Me', icon: () => (<RestoreIcon/>), content: () => (<EmployeeSelf/>)},
 ];
 
 class App extends React.Component {
     state = {
         tabIndex: 0,
         name: [],
+        schedule: {},
+        employees: [],
+        activeEmployeeId: "2",
+        activeTask: null,
     };
 
     constructor() {
         super();
 
+        setInterval(() => {
+
+            getEmployees().then(employees => {
+                let task = null;
+
+                for (let employee of employees) {
+                    if (employee.id === this.state.activeEmployeeId) {
+                        task = employee.currentTask;
+                        break;
+                    }
+                }
+
+                this.setState({employees, activeTask: task});
+            });
+
+            getSchedule().then(schedule => {
+                this.setState({schedule});
+            });
+
+        }, 2000)
+
+    }
+
+    get activeEmployee() {
+        if (this.state.activeEmployeeId === null) {
+            return null;
+        }
+
+        for (let e of this.state.employees) {
+            if (e.id === this.state.activeEmployeeId) {
+                return e;
+            }
+        }
+
+        return null;
+    }
+
+    get activeEmployeeSchedule() {
+        const events = this.state.schedule.events;
+        if (!events) {
+            return [];
+        }
+
+        return events.filter(e => e.employeeId === this.state.activeEmployeeId);
     }
 
     handleTabChange = (event, value) => {
         this.setState({tabIndex: value});
     };
 
+    handleTaskChange = (newTask) => {
+        this.setState({activeTask: newTask});
+    };
+
     render() {
         const {classes} = this.props;
         const {tabIndex} = this.state;
 
+        console.log(this.state);
+
         return (
             <div className={classes.root}>
                 <div className={classes.container}>
-                {tabIndex < tabs.length ? tabs[tabIndex].content() : null}
+                    {tabIndex < tabs.length ? tabs[tabIndex].content(this) : null}
                 </div>
                 <BottomNavigation
                     value={tabIndex}
