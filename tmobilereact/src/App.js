@@ -6,7 +6,7 @@ import {withStyles} from "@material-ui/core/styles";
 import MenuItem from "@material-ui/core/MenuItem";
 import TextField from "@material-ui/core/TextField";
 import Input from "@material-ui/core/Input";
-import {Grid, Typography} from "@material-ui/core";
+import {Grid} from "@material-ui/core";
 import InputMask from "react-input-mask";
 import FormControl from "@material-ui/core/FormControl";
 import Select from "@material-ui/core/Select";
@@ -15,7 +15,7 @@ import BottomNavigation from "@material-ui/core/BottomNavigation";
 import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
 import RestoreIcon from '@material-ui/icons/Restore';
 import CurrentSchedule from "./CurrentSchedule";
-import {getEmployees, getSchedule, ScheduleItem} from "./schedules";
+import {getEmployees, getSchedule} from "./schedules";
 import AddToQueue from "./AddToQueue";
 import EmployeeSelf from "./EmployeeSelf";
 import CustomerIdle from "./CustomerIdle";
@@ -547,7 +547,7 @@ const employees = [
 
 const tabs = [
     {name: 'Add Queue', icon: () => (<RestoreIcon/>), content: () => (<AddToQueue/>)},
-    {name: 'Current Queue', icon: () => (<RestoreIcon/>), content: () => (<EmployeeManagement/>)},
+    {name: 'Employees', icon: () => (<RestoreIcon/>), content: () => (<EmployeeManagement/>)},
     {
         name: 'Current Schedule',
         icon: () => (<RestoreIcon/>),
@@ -561,10 +561,11 @@ const tabs = [
                     onTaskChange={comp.handleTaskChange}
                     employeeSchedule={comp.activeEmployeeSchedule}
                     employee={comp.activeEmployee}/>;
-            }  else {
+            } else {
                 return <CustomerServing
                     onTaskChange={comp.handleTaskChange}
                     currentTask={comp.state.activeTask}
+                    employeeSchedule={comp.activeEmployeeSchedule}
                     employee={comp.activeEmployee}/>;
             }
         }
@@ -654,7 +655,8 @@ class App extends React.Component {
                     value={tabIndex}
                     onChange={this.handleTabChange}
                     showLabels
-                    className={classes.navigator}>
+                    className={classes.navigator}
+                    style={{height: '70px'}}>
                     {tabs.map((item, i) => (<BottomNavigationAction key={i} label={item.name} icon={item.icon()}/>))}
                 </BottomNavigation>
             </div>

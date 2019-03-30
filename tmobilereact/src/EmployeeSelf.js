@@ -81,7 +81,6 @@ class EmployeeSelf extends React.Component {
     }
 
     onToggleActive = () => {
-        console.log('hgds');
 
         if (this.isActive) {
             deactivateEmployee(this.state.employee).then(() => {
@@ -100,17 +99,12 @@ class EmployeeSelf extends React.Component {
 
     };
 
-    onLoadNextCustomer = () => {
-        console.log('load');
-    };
-
     render() {
         return this.state.employee ? (
             <div>
                 <Typography>{this.currentName}</Typography>
                 <Typography>Status: {this.currentStatus}</Typography>
                 <Button variant="contained" color="primary" onClick={this.onToggleActive}>Set {this.isActive ? 'Inactive' : 'Active'}</Button>
-                <Button variant="contained" color="primary" onClick={this.onLoadNextCustomer}>Next Customer</Button>
             </div>
         ) : (<Typography>Loading employee</Typography>);
     }
