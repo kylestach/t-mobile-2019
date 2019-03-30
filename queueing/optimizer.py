@@ -2,8 +2,8 @@ import math
 import random
 import itertools
 
-R = 1.0
-K = 1.0
+R = 1e-1
+K = 2.0
 
 class Task:
     def __init__(self,
@@ -30,13 +30,17 @@ class Task:
             # If it's scheduled before the appointment, it's a failure
             if time < self.online_time:
                 return float('inf')
-            zeta = K * math.exp(R * max(0, self.online_time - now_time))
-            target_time = self.online_time
+            if self.checkin_time is None:
+                zeta = K * math.exp(R * min(0, self.online_time - now_time))
+                target_time = self.online_time
+            else:
+                zeta = K
+                target_time = max(self.online_time, self.checkin_time)
         else:
             zeta = 0
             target_time = self.checkin_time
         time_err = max(0, time - target_time)
-        return time_err * (time_err + zeta)
+        return time_err * (time_err * (zeta + 1))
 
     def __repr__(self):
         return "%s: %s" % (self.task_name, self.time_to_complete)
@@ -70,7 +74,7 @@ class Schedule:
     def eval_cost(self, now_time):
         cost = 0
         for worker in self.rep_assignments:
-            schedule_time = worker.current_task_end
+            schedule_time = max(worker.current_task_end, now_time)
             tasks = self.rep_assignments[worker]
             for task in tasks:
                 # If this task is online, delay it until the proper start time.
@@ -120,8 +124,12 @@ def optimize_schedule(tasks, reps, now_time):
     prev_cost = schedule.eval_cost(now_time)
 
     for i in range(num_iterations):
+        if random.random() < 1e-2:
+            schedule = best_so_far
+            prev_cost = best_cost
+
         T = 0.9999 ** i
-        next_neighbor = schedule.gen_neighbor(random.randint(1, int(len(tasks) / 2 + 0.5)))
+        next_neighbor = schedule.gen_neighbor(random.randint(1, int(T * len(tasks) / 2 + 0.5)))
         new_cost = next_neighbor.eval_cost(now_time)
         if new_cost < prev_cost or math.exp(-1e-3 * (new_cost - prev_cost) / T) >= random.random():
             schedule = next_neighbor
@@ -135,13 +143,13 @@ def optimize_schedule(tasks, reps, now_time):
 
 def main():
     # tasks = [Task(15, 0), Task(10, 0), Task(50, 0), Task(30, 0), Task(30, 0), Task(25, 0), Task(31, None, 25, "spanish")]
-    tasks = [Task("sim", "bob", 25, 0)] * 30 + [Task("sell", "alice", 60, 0)] * 15 + [Task("THING C", "eve", 30, None, 30, {"language": "spanish"})]
+    tasks = [Task("sim", "bob", 25, 0)] * 30 + [Task("sell", "alice", 60, 0)] * 15 + [Task("THING C", "eve", 30, None, 15, constraints={"language": "spanish"})]
     random.shuffle(tasks)
     reps = [
         Worker("A", 0, task_proficiencies={"sim": 1.5}),
         Worker("B", 0, task_proficiencies={"sell": 1.3}),
         Worker("C", 0, constraint_props={"language": ["english", "spanish"]})]
-    optimize_schedule(tasks, reps, 0)
+    optimize_schedule(tasks, reps, 40.)
 
 if __name__ == '__main__':
     main()
