@@ -110,6 +110,9 @@ class AddToQueue extends React.Component {
         employees: [],
         appointments: [],
         selectedEmployeeId: "",
+        isRecording: true,
+        recognition: window.SpeechRecognition,
+        finalTranscript: "",
     };
 
     constructor() {
@@ -122,6 +125,28 @@ class AddToQueue extends React.Component {
         getAppointment().then(appointments => {
             this.setState({ appointments })
         }).catch(console.error);
+
+        window.SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+        this.state.recognition = new window.SpeechRecognition();
+
+        this.state.recognition.interimResults = true;
+        this.state.recognition.maxAlternatives = 10;
+        this.state.recognition.continuous = true;
+
+        this.state.recognition.onresult = (event) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex, len = event.results.length; i < len; i++) {
+                let transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    this.state.finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            // console.log(finalTranscript + '<i style="color:#ddd;">' + interimTranscript + '</>'); FOR DEBUGING
+            console.log(this.state.finalTranscript);
+        }
 
     }
 
@@ -166,7 +191,30 @@ class AddToQueue extends React.Component {
     };
 
     onSubmit = () => {
-        console.log('BIG Click!');
+        console.log(this.state.isRecording ? 'listening' : 'stopped listening');
+        this.setState({isRecording: !this.state.isRecording});
+        if (this.state.isRecording) {
+            this.state.recognition.start();
+        } else {
+            this.state.recognition.stop();
+        //    MAKE CALL TO GET THE LINKS
+        fetch('http://13.68.142.20/add_task', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: this.state.finalTranscript,
+            })
+        }).then(resp=>{
+        //    make sure no error happened
+            if (!resp.ok) {
+                throw new Error("HTTP error, status = " + resp.status);
+            }
+        });
+            this.setState({finalTranscript: ''})
+        }
     };
 
     render() {
@@ -267,8 +315,8 @@ class AddToQueue extends React.Component {
                     label="Solaris Expert"
                 />
             </div>
-            <Button variant="contained" color="primary" onClick={this.onSubmit} className={classes.button}>
-                Primary
+            <Button variant="contained" color="primary" onClick={this.onSubmit } className={classes.button}>
+                Voice Assistant
             </Button>
         </div>);
     }
