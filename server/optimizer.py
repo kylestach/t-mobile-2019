@@ -17,23 +17,25 @@ class Task:
     def __init__(self,
                  task_name,
                  customer_name,
+                 customer_phone,
                  time_to_complete,
                  checkin_time=None,
                  online_time=None,
                  constraints={"language": "english"}):
         self.task_name = task_name
         self.customer_name = customer_name
+        self.customer_phone = customer_phone
         self.time_to_complete = time_to_complete
         self.checkin_time = checkin_time
         self.online_time = online_time
-        self.constraints = constraints
+        self.constraints = constraints.copy()
         self.uuid = new_global_uuid()
 
     def eval_cost(self, worker, time, now_time):
         zeta = None
         target_time = None
         if not worker.matches_hard_constraints(self.constraints):
-            return float('inf')
+            return 1e10
 
         if self.online_time is not None:
             # If it's scheduled before the appointment, it's a failure
@@ -59,6 +61,8 @@ class Task:
             "checkin_time": self.checkin_time,
             "online_time": self.online_time,
             "uuid": self.uuid,
+            "constraints": self.constraints,
+            "phone": self.customer_phone
         }
 
     def __repr__(self):
@@ -73,10 +77,11 @@ class Worker:
         self.current_task_end = current_task_end
         self.default_proficiency = default_proficiency
         self.task_proficiencies = task_proficiencies
-        self.constraint_props = constraint_props
-        self.constraint_props["name"] = [self.name]
+        self.constraint_props = constraint_props.copy()
         self.uuid = new_global_uuid()
+        self.constraint_props["employee_uuid"] = [self.uuid]
         self.current_task = None
+        self.active = False
 
     def score(self, task_name):
         return self.task_proficiencies[task_name] if task_name in self.task_proficiencies else self.default_proficiency
@@ -95,7 +100,8 @@ class Worker:
             "default_proficiency": self.default_proficiency,
             "task_proficiencies": self.task_proficiencies,
             "constraint_props": self.constraint_props,
-            "uuid": self.uuid
+            "uuid": self.uuid,
+            "active": self.active,
         }
 
 
@@ -111,7 +117,8 @@ class Schedule:
     def eval_cost(self, now_time):
         cost = 0
         for worker in self.rep_assignments:
-            schedule_time = max(worker.current_task_end, now_time)
+            schedule_begin = max(worker.current_task_end, now_time)
+            schedule_time = schedule_begin
             tasks = self.rep_assignments[worker]
             for task in tasks:
                 # If this task is online, delay it until the proper start time.
@@ -119,7 +126,8 @@ class Schedule:
                     schedule_time = task.online_time
                 cost += task.eval_cost(worker, schedule_time, now_time)
                 schedule_time += task.time_to_complete / worker.score(task.task_name)
-            cost += schedule_time ** 2
+                schedule_time += 2
+            cost += (schedule_time - schedule_begin) ** 2
         return cost
 
     def gen_neighbor(self, num_moves):
@@ -148,6 +156,7 @@ class Schedule:
 
 
 def optimize_schedule(tasks, reps, now_time):
+    reps = [rep for rep in reps if rep.active]
     default_assignments = {r: [] for r in reps}
     for r, t in zip(itertools.cycle(reps), tasks):
         default_assignments[r].append(t)
@@ -179,6 +188,7 @@ def optimize_schedule(tasks, reps, now_time):
             best_so_far = schedule
             best_cost = new_cost
 
+    print("Optimization finished with cost %s" % best_cost)
     return best_so_far
 
 def main():
