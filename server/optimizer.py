@@ -147,14 +147,14 @@ class Schedule:
 
 
 def optimize_schedule(tasks, reps, now_time):
-    if not tasks or not reps:
-        return
-
     default_assignments = {r: [] for r in reps}
     for r, t in zip(itertools.cycle(reps), tasks):
         default_assignments[r].append(t)
 
     schedule = Schedule(default_assignments)
+
+    if not tasks or not reps:
+        return schedule
 
     best_so_far = schedule
     best_cost = best_so_far.eval_cost(now_time)
