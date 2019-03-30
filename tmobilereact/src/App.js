@@ -17,7 +17,7 @@ import RestoreIcon from '@material-ui/icons/Restore';
 import CurrentSchedule from "./CurrentSchedule";
 import {getEmployees, getSchedule} from "./schedules";
 import AddToQueue from "./AddToQueue";
-
+import EmployeeManagement from "./EmployeeManagement";
 
 const styles = theme => ({
     container: {
@@ -547,7 +547,7 @@ const tabs = [
     {name: 'Add Queue', icon: () => (<RestoreIcon/>), content: () => (<AddToQueue/>)},
     {name: 'Current Queue', icon: () => (<RestoreIcon/>), content: () => (<Typography>I am current queue</Typography>)},
     {name: 'Current Schedule', icon: () => (<RestoreIcon/>), content: () => (<CurrentSchedule events={events} employees={employees}/>)},
-    {name: 'Customer', icon: () => (<RestoreIcon/>), content: () => (<Typography>I am customer</Typography>)},
+    {name: 'Customer', icon: () => (<RestoreIcon/>), content: () => (<EmployeeManagement/>)},
     {name: 'Me', icon: () => (<RestoreIcon/>), content: () => (<Typography>I am me</Typography>)},
 ];
 
