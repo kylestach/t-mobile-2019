@@ -438,7 +438,7 @@ class AddToQueue extends React.Component {
           onClick={this.onSubmit}
           className={classes.button}
         >
-          Voice Assistant
+          {this.state.isChrome ? "Voice Assistant" :" Submit" }
         </Button>
       </div>
     );

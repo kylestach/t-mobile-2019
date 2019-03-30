@@ -21,7 +21,7 @@ import EmployeeSelf from "./EmployeeSelf";
 import CustomerIdle from "./CustomerIdle";
 import CustomerServing from "./CustomerServing";
 import EmployeeManagement from "./EmployeeManagement";
-
+import Appointments from "./Appointments";
 const styles = theme => ({
     container: {
         display: "flex",
@@ -570,6 +570,7 @@ const tabs = [
         }
     },
     {name: 'Me', icon: () => (<RestoreIcon/>), content: () => (<EmployeeSelf/>)},
+    {name: 'Appointments', icon: () => (<RestoreIcon/>), content: () => (<Appointments/>)},
 ];
 
 class App extends React.Component {
