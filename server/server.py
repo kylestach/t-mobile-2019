@@ -103,8 +103,9 @@ def add_task():
 @app.route("/get_appointments", methods=['GET'])
 def get_appointments():
     response = jsonify([
-        t.serialize() for t in sorted(tasks, key=lambda t: t.online_time)
-        if t.online_time is not None])
+        t.serialize() for t in sorted(
+            [t for t in tasks if t.online_time is not None],
+            key=lambda t: t.online_time)])
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
