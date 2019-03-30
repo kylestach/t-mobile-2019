@@ -37,6 +37,8 @@ def add_worker():
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 
@@ -73,6 +75,8 @@ def complete_task_stub():
     complete_task(request.get_json()['uuid'])
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 def complete_task(my_uuid):
@@ -109,6 +113,8 @@ def schedule_appointment():
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 
@@ -130,6 +136,8 @@ def add_task():
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 
@@ -157,6 +165,8 @@ def checkin_appointment():
     filtered.checkin_time = time.time() // 60
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 @app.route("/schedule", methods=['GET'])
