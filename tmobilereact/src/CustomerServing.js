@@ -1,5 +1,6 @@
+// @flow
 import React from "react";
-import {activateEmployee, deactivateEmployee, dequeueTask, getEmployees} from "./schedules";
+import {activateEmployee, completeTask, deactivateEmployee, dequeueTask, getEmployees} from "./schedules";
 import {Button, Typography, withStyles} from "@material-ui/core";
 import PropTypes from "prop-types";
 import Chip from "@material-ui/core/Chip";
@@ -15,8 +16,8 @@ function clone(obj) {
 
 const styles = theme => ({
     root: {
-        position: 'relative',
-        height: '100%',
+        padding: '16px',
+        textAlign: 'center',
     },
     navigator: {
         position: 'fixed',
@@ -54,11 +55,15 @@ const styles = theme => ({
         margin: theme.spacing.unit / 4,
     },
     buttonRow: {
-
+        display: 'flex',
+        flexDirection: 'row',
     },
     noLabel: {
         marginTop: theme.spacing.unit * 3,
     },
+    spacer: {
+        flexGrow: 1,
+    }
 });
 
 
@@ -95,21 +100,59 @@ class CustomerServing extends React.Component {
         return "You don't have any queued customers right now."
     }
 
+    phoneFormatted(rawPhone) {
+        const phone = rawPhone
+            .replace('(', '')
+            .replace(')', '')
+            .replace('-', '')
+            .replace(' ', '');
+
+        return '(' + phone.substring(0, 3) + ')-'  + phone.substring(3, 6) + ' ' + phone.substring(6);
+    }
+
+    onEndInteraction = () => {
+        completeTask(this.props.employee.id).then(() => {
+            this.props.onTaskChange(null);
+        }).catch(console.error);
+    };
+
+    onEndAndNextCustomer = () => {
+        completeTask(this.props.employee.id).then(() => {
+            dequeueTask(this.props.employee.id).then(task => {
+                this.props.onTaskChange(task);
+            }).catch(console.error);
+        }).catch(console.error);
+    };
+
+    get canDequeueCustomer() {
+        return this.props.employeeSchedule.length && (this.props.employeeSchedule[0].onlineTime === null || this.props.employeeSchedule[0] < new Date());
+    }
+
     render() {
         const { classes, currentTask } = this.props;
         console.log(this.props.employeeSchedule);
 
         const constraintChips = Object.entries(currentTask.constraints).map(([key, value]) => `${key}:${value}`);
 
-        return (<div>
-            <Typography>{currentTask.title}</Typography>
-            <Typography>{currentTask.phone}</Typography>
+        return (<div className={classes.root}>
+            <Typography variant='display2'>{currentTask.title}</Typography>
+            <Typography variant='display1'>{this.phoneFormatted(currentTask.phone)}</Typography>
             <div className={classes.chipContainer}>
-                {constraintChips.map(text => (<Chip label={text} className={classes.chip} />))}
+                {constraintChips.map(text => (<Chip key={text} label={text} className={classes.chip} />))}
+            </div>
+            <div>
+
             </div>
             <div className={classes.buttonRow}>
-                <Button>End Interaction</Button>
-                <Button>End Interaction &amp; Go to next customer</Button>
+                <div className={classes.spacer}/>
+                <Button variant="contained" color="primary" onClick={this.onEndInteraction}>End Interaction</Button>
+                <div className={classes.spacer}/>
+                {this.canDequeueCustomer ? (
+                    <React.Fragment>
+                        <Button variant="contained" color="primary" onClick={this.onEndAndNextCustomer}>End &amp; Next customer</Button>
+                        <div className={classes.spacer}/>
+                    </React.Fragment>
+                ) : null}
             </div>
         </div>);
     }
@@ -120,6 +163,7 @@ CustomerServing.propTypes = {
     classes: PropTypes.object.isRequired,
     onTaskChange: PropTypes.func.isRequired,
     currentTask: PropTypes.object.isRequired,
+    employeeSchedule: PropTypes.array.isRequired,
     employee: PropTypes.object.isRequired,
 };
 

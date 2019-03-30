@@ -1,4 +1,3 @@
-
 /*
 [
   {
@@ -33,7 +32,6 @@
   }
 ]
  */
-import App from "../App";
 
 export class Employee {
     id;
@@ -171,33 +169,36 @@ export async function getEmployees() {
 
     return data.map(Employee.fromJSON);
 }
+
 export async function activateEmployee(e) {
-  console.log("employee almost done + "+e.id.toString());
-  const response = await fetch('http://13.68.142.20/activate_rep',{ headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  },
-    method:"POST",body:JSON.stringify({uuid:e.id})
-  });
-  
- 
-  if (!response.ok) {
-      throw new Error("HTTP error, status = " + response.status);
-  }
+    console.log("employee almost done + " + e.id.toString());
+    const response = await fetch('http://13.68.142.20/activate_rep', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        method: "POST", body: JSON.stringify({uuid: e.id})
+    });
+
+
+    if (!response.ok) {
+        throw new Error("HTTP error, status = " + response.status);
+    }
 }
 
 export async function deactivateEmployee(e) {
-  const response = await fetch('http://13.68.142.20/deactivate_rep',{
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    method:"POST",body:JSON.stringify({uuid:e.id})
-  });
-  if (!response.ok) {
-      throw new Error("HTTP error, status = " + response.status);
-  }
+    const response = await fetch('http://13.68.142.20/deactivate_rep', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        method: "POST", body: JSON.stringify({uuid: e.id})
+    });
+    if (!response.ok) {
+        throw new Error("HTTP error, status = " + response.status);
+    }
 }
+
 export async function getSchedule() {
     const employees = await getEmployees();
 
@@ -241,7 +242,7 @@ export async function getSchedule() {
     }
 
 
-    return { employees, events };
+    return {employees, events};
 }
 
 /*
@@ -305,3 +306,17 @@ export async function dequeueTask(employeeId) {
 
     return data.map(ScheduleItem.fromJSON);
 }
+
+export async function completeTask(employeeId) {
+    const response = await fetch(`http://13.68.142.20/complete_task`, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        method: "POST", body: JSON.stringify({uuid: employeeId})
+    });
+    if (!response.ok) {
+        throw new Error("HTTP error, status = " + response.status);
+    }
+}
+

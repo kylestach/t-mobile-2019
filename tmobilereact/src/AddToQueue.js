@@ -143,6 +143,7 @@ class AddToQueue extends React.Component {
     employees: [],
     appointments: [],
     selectedEmployeeId: "",
+      language: 'english',
     isRecording: true,
     recognition: window.SpeechRecognition,
     finalTranscript: "",
@@ -164,7 +165,7 @@ class AddToQueue extends React.Component {
         this.setState({ appointments });
       })
       .catch(console.error);
-    this.state.isChrome = !!window.chrome && !!window.chrome.webstore;
+    //this.state.isChrome = !!window.chrome && !!window.chrome.webstore;
     if (this.state.isChrome) {
       window.SpeechRecognition =
         window.webkitSpeechRecognition || window.SpeechRecognition;
@@ -288,8 +289,10 @@ class AddToQueue extends React.Component {
               body: JSON.stringify({
                 speech: null,
                 language: this.state.language,
-                employee: this.state.employee_id,
-                task_name: this.state.task_name
+                employee: this.state.selectedEmployeeId,
+                task_name: this.state.task_name,
+                  customer_name: (this.state.firstName + ' ' + this.state.lastName).trim(),
+                  phone: this.state.phone,
               })
             }).then(resp => {
               //    make sure no error happened
@@ -389,18 +392,43 @@ class AddToQueue extends React.Component {
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
-            <MenuItem value="Chinese">
-              <em>Chinese</em>
+            <MenuItem value="accessory">
+              Accessory
             </MenuItem>
-            <MenuItem value="French">
-              <em>French</em>
+            <MenuItem value="activate_service">
+              Activate Service
             </MenuItem>
-            <MenuItem value="Hindi">
-              <em>Hindi</em>
+            <MenuItem value="activate_prepaid_service">
+              Activate Prepaid Service
             </MenuItem>
-            <MenuItem value="Spanish">
-              <em>Spanish</em>
+            <MenuItem value="upgrade">
+              Upgrade
             </MenuItem>
+              <MenuItem value="sim">
+                  SIM
+              </MenuItem>
+              <MenuItem value="bill_pay">
+                  Bill Pay
+              </MenuItem>
+              <MenuItem value="insurance">
+                  Insurance
+              </MenuItem>
+              <MenuItem value="just_looking">
+                  Just Looking
+              </MenuItem>
+              <MenuItem value="return">
+                  Return
+              </MenuItem>
+              <MenuItem value="service_account">
+                  Service Account
+              </MenuItem>
+              <MenuItem value="service_device">
+                  Service Device
+              </MenuItem>
+              <MenuItem value="t_mobile_tuesdays">
+                    T-Mobile Tuesdays
+              </MenuItem>
+
           </Select>
         </FormControl>
         <FormControl className={classes.wideFormControl}>
