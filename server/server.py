@@ -1,9 +1,11 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import optimizer
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
+CORS(app)
 
 tasks = []
 workers = []
@@ -12,15 +14,18 @@ current_schedule = optimizer.Schedule({})
 alpha = 1e-2
 
 task_times = {
-    'coverage': 30,
-    'problem': 40,
-    'upgrade': 50,
-    'add': 60,
-    'sim': 5,
-    'features': 15,
-    'accessories': 20,
-    'help': 20,
-    'other': 20,
+    'accessory': 10,
+    'activate_service': 20,
+    'activate_prepaid_service': 15,
+    'upgrade': 45,
+    'sim': 10,
+    'bill_pay': 5,
+    'insurance': 30,
+    'just_looking': 20,
+    'return': 10,
+    'service_account': 30,
+    'service_device': 60,
+    't_mobile_tuesdays': 1,
 }
 
 
@@ -34,6 +39,8 @@ def add_worker():
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 
@@ -54,7 +61,12 @@ def pull_latest_task(my_uuid):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
     worker = worker[0]
-    task = current_schedule.rep_assignments[worker][0]
+    task = current_schedule.rep_assignments[worker]
+    if not task:
+        response = jsonify(success=False)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+    task = task[0]
     tasks = [t for t in tasks if str(t.uuid) != str(task.uuid)]
     complete_task(my_uuid)
     worker.current_task = task
@@ -70,7 +82,10 @@ def complete_task_stub():
     complete_task(request.get_json()['uuid'])
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
+
 
 def complete_task(my_uuid):
     worker = [w for w in workers if str(w.uuid) == str(my_uuid)]
@@ -106,6 +121,8 @@ def schedule_appointment():
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 
@@ -127,6 +144,8 @@ def add_task():
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
 
 
@@ -154,7 +173,10 @@ def checkin_appointment():
     filtered.checkin_time = time.time() // 60
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
+    response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
+
 
 @app.route("/schedule", methods=['GET'])
 def get_schedule():
@@ -191,6 +213,38 @@ def deactivate_rep():
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
+
+
+tasks.append(optimizer.Task(
+    "sim",
+    "Will",
+    "6666666666",
+    5,
+    time.time() // 60,
+    None,
+    constraints={"language": "english"},
+))
+tasks.append(optimizer.Task(
+    "service_device",
+    "Ananth",
+    "1111111111",
+    60,
+    None,
+    time.time() // 60 + 15,
+    constraints={"language": "english"},
+))
+
+workers.append(optimizer.Worker(
+    "Naman",
+    time.time() // 60
+))
+workers.append(optimizer.Worker(
+    "Kyle",
+    time.time() // 60
+))
+for w in workers:
+    w.active = True
+update_schedule()
 
 
 sched = BackgroundScheduler(daemon=True)
