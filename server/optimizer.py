@@ -121,6 +121,7 @@ class Schedule:
                     schedule_time = task.online_time
                 cost += task.eval_cost(worker, schedule_time, now_time)
                 schedule_time += task.time_to_complete / worker.score(task.task_name)
+                schedule_time += 2
             cost += (schedule_time - schedule_begin) ** 2
         return cost
 
