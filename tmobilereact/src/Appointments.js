@@ -30,11 +30,7 @@ import TextField from "@material-ui/core/TextField";
 import MaskedInput from "react-text-mask";
 import Input from "@material-ui/core/Input";
 import { getAppointment, getEmployees } from "./schedules";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
-import Datetime from "react-datetime"
-import './react-datetime.css';
 function TextMaskCustom(props) {
   const { inputRef, ...other } = props;
 
@@ -83,7 +79,7 @@ const styles = theme => ({
   },
   formControl: {
     margin: theme.spacing.unit,
-    minWidth: 120,
+    minWidth: 300,
     maxWidth: 300
   },
   wideFormControl: {
@@ -251,24 +247,21 @@ class Appointments extends React.Component {
 
   onSubmit = () => {
     console.log(this.state.isRecording ? "listening" : "stopped listening");
-    this.setState({ isRecording: !this.state.isRecording });
-    if(this.state.isChrome){
-        if (this.state.isRecording) {
-            this.state.recognition.start();
-          } else {
-            this.state.recognition.stop();
-            //    MAKE CALL TO GET THE LINKS
-            fetch("http://13.68.142.20/add_task", {
+
+    const apptTime = new Date();
+
+        fetch("http://13.68.142.20/schedule_appointment", {
               method: "POST",
               headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                speech: this.state.finalTranscript,
+                time: (+apptTime) / 60000,
                 language: this.state.language,
                 employee: this.state.employee_id,
-                task_name: this.state.task_name
+                task_name: this.state.task_name,
+                customer_name: (this.customerFirstName + ' ' + this.customerLastName).trim(),
               })
             }).then(resp => {
               //    make sure no error happened
@@ -276,30 +269,7 @@ class Appointments extends React.Component {
                 throw new Error("HTTP error, status = " + resp.status);
               }
             });
-            this.setState({ finalTranscript: "" });
-          }
-    }
-    else{
-        fetch("http://13.68.142.20/add_task", {
-              method: "POST",
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                speech: null,
-                language: this.state.language,
-                employee: this.state.employee_id,
-                task_name: this.state.task_name
-              })
-            }).then(resp => {
-              //    make sure no error happened
-              if (!resp.ok) {
-                throw new Error("HTTP error, status = " + resp.status);
-              }
-            });
-            this.setState({ finalTranscript: "" });
-    }
+
   };
 
   render() {
@@ -314,7 +284,7 @@ class Appointments extends React.Component {
           id="time"
           label="Appointment Time"
           className={classes.textField}
-          value={this.customerFirstName}
+          value={this.state.appointment}
           onChange={this.handleTextChange("appointment")}
           disabled={this.isAppointment}
           margin="normal"
