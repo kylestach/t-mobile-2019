@@ -82,6 +82,7 @@ class Worker:
         self.constraint_props["employee_uuid"] = [self.uuid]
         self.current_task = None
         self.active = False
+        self.num_customers_helped = 0
 
     def score(self, task_name):
         return self.task_proficiencies[task_name] if task_name in self.task_proficiencies else self.default_proficiency

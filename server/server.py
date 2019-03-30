@@ -94,6 +94,7 @@ def complete_task(my_uuid):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
     worker = worker[0]
+    worker.num_customers_helped += 1
     time_to_complete = max(1, time.time() // 60 - (
         worker.current_task_end - worker.current_task.time_to_complete))
     ratio = worker.current_task.time_to_complete / time_to_complete
@@ -209,6 +210,35 @@ def deactivate_rep():
     global workers
     uuid = request.get_json()['uuid']
     [w for w in workers if w.uuid == uuid][0].active = False
+    complete_task([w for w in workers if w.uuid == uuid][0].uuid)
+    update_schedule()
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route("/statistics", methods=['GET'])
+def statistics():
+    global workers
+    response = jsonify({
+            w.name: {
+                'proficiencies': {t: w.score(t) for t in task_times.keys()},
+                'num_customers_helped': w.num_customers_helped,
+            } for w in workers
+        })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route("/cancel", methods=['POST'])
+def cancel_task():
+    global tasks
+    uuid = request.get_json()['task_uuid']
+    tasks = [t for t in tasks if t.uuid != uuid]
+    for w in workers:
+        if w.current_task is not None and w.current_task.uuid == uuid:
+            w.current_task = None
+            w.current_task_end = time.time() // 60
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
