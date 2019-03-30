@@ -29,6 +29,7 @@ def add_worker():
         request.get_json()['name'],
         time.time() // 60
     ))
+    update_schedule()
     return jsonify(success=True)
 
 
@@ -65,6 +66,7 @@ def schedule_appointment():
         request.get_json()['time'],
         constraints={"language": request.get_json()['language']},
     ))
+    update_schedule()
     return jsonify(success=True)
 
 
@@ -79,6 +81,7 @@ def add_task():
         None,
         constraints={"language": request.get_json()['language']},
     ))
+    update_schedule()
     return jsonify(success=True)
 
 
