@@ -141,15 +141,26 @@ export async function getEmployees() {
     return data.map(Employee.fromJSON);
 }
 export async function activateEmployee(e) {
-  const response = await fetch('http://13.68.142.20/activate_rep',{
+  console.log("employee almost done + "+e.id.toString());
+  const response = await fetch('http://13.68.142.20/activate_rep',{ headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  },
     method:"POST",body:JSON.stringify({uuid:e.id})
   });
+  
+ 
   if (!response.ok) {
       throw new Error("HTTP error, status = " + response.status);
   }
 }
+
 export async function deactivateEmployee(e) {
   const response = await fetch('http://13.68.142.20/deactivate_rep',{
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
     method:"POST",body:JSON.stringify({uuid:e.id})
   });
   if (!response.ok) {
