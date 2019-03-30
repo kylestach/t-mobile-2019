@@ -61,7 +61,12 @@ def pull_latest_task(my_uuid):
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
     worker = worker[0]
-    task = current_schedule.rep_assignments[worker][0]
+    task = current_schedule.rep_assignments[worker]
+    if not task:
+        response = jsonify(success=False)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+    task = task[0]
     tasks = [t for t in tasks if str(t.uuid) != str(task.uuid)]
     complete_task(my_uuid)
     worker.current_task = task
@@ -80,6 +85,7 @@ def complete_task_stub():
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
     response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
+
 
 def complete_task(my_uuid):
     worker = [w for w in workers if str(w.uuid) == str(my_uuid)]
@@ -170,6 +176,7 @@ def checkin_appointment():
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST')
     response.headers.add('Access-Control-Allow-Headers', 'content-type,authorization')
     return response
+
 
 @app.route("/schedule", methods=['GET'])
 def get_schedule():
