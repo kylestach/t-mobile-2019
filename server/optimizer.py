@@ -21,7 +21,7 @@ class Task:
                  time_to_complete,
                  checkin_time=None,
                  online_time=None,
-                 constraints={"language": "english"}):
+                 constraints={"language": "english"}, recommended=[]):
         self.task_name = task_name
         self.customer_name = customer_name
         self.customer_phone = customer_phone
@@ -30,6 +30,7 @@ class Task:
         self.online_time = online_time
         self.constraints = constraints.copy()
         self.uuid = new_global_uuid()
+        self.recommended = recommended
 
     def eval_cost(self, worker, time, now_time):
         zeta = None
@@ -62,7 +63,8 @@ class Task:
             "online_time": self.online_time,
             "uuid": self.uuid,
             "constraints": self.constraints,
-            "phone": self.customer_phone
+            "phone": self.customer_phone,
+            "recommended": self.recommended,
         }
 
     def __repr__(self):

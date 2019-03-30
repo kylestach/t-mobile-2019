@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import optimizer
+from articles import parseRecuests
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -141,6 +142,7 @@ def add_task():
         time.time() // 60,
         None,
         constraints=constraints,
+        recommmended=parseRecuests(request.get_json()['speech']),
     ))
     update_schedule()
     response = jsonify(success=True)

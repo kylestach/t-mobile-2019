@@ -113,6 +113,7 @@ class AddToQueue extends React.Component {
         isRecording: true,
         recognition: window.SpeechRecognition,
         finalTranscript: "",
+        task_name: ""
     };
 
     constructor() {
@@ -157,6 +158,10 @@ class AddToQueue extends React.Component {
     handleEmployeeChange = (e, value) => {
         this.setState({selectedEmployeeId: e.target.value});
     };
+
+    handleTaskChange = (e, value) => {
+        this.setState({task_name: e.target.value})
+    }
 
     handleTextChange = (key) => {
         return (event) => {
@@ -205,7 +210,10 @@ class AddToQueue extends React.Component {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: this.state.finalTranscript,
+                speech: this.state.finalTranscript,
+                language: this.state.language,
+                employee: this.state.employee_id,
+                task_name: this.state.task_name
             })
         }).then(resp=>{
         //    make sure no error happened
@@ -281,40 +289,58 @@ class AddToQueue extends React.Component {
                     {this.state.employees.map(item => (<MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>))}
                 </Select>
             </FormControl>
-            <div>
-                <Typography>Issue</Typography>
-                <FormControlLabel
-                    control={<Checkbox checked={this.state.gilad || false} onChange={this.handleCheckChange('gilad')} value="gilad" />}
-                    label="SIM"
-                />
-                <FormControlLabel
-                    control={<Checkbox checked={this.state.jason || false} onChange={this.handleCheckChange('jason')} value="jason" />}
-                    label="Issue 2"
-                />
-                <FormControlLabel
-                    control={
-                        <Checkbox checked={this.state.antoine || false} onChange={this.handleCheckChange('antoine')} value="antoine" />
-                    }
-                    label="Issue 3"
-                />
-                <FormControlLabel
-                    control={
-                        <Checkbox checked={this.state.antoine || false} onChange={this.handleCheckChange('antoine')} value="antoine" />
-                    }
-                    label="Issue 4"
-                />
-            </div>
-            <div>
-                <Typography>Restrictions</Typography>
-                <FormControlLabel
-                    control={<Checkbox checked={this.state.spanish || false} onChange={this.handleCheckChange('spanish')} value="spanish" />}
-                    label="Spanish Language"
-                />
-                <FormControlLabel
-                    control={<Checkbox checked={this.state.solaris || false} onChange={this.handleCheckChange('solaris')} value="solaris" />}
-                    label="Solaris Expert"
-                />
-            </div>
+            <FormControl>
+                <InputLabel htmlFor="u-simple">Issues</InputLabel>
+                <Select
+                    value={this.state.task_name}
+                    onChange={this.handleTaskChange}
+                    inputProps={{
+                        name: 'employee',
+                        id: 'employee-simple'
+                    }}>
+                    <MenuItem value="">
+                        <em>None</em>
+                    </MenuItem>
+                    <MenuItem value="Chinese">
+                        <em>Chinese</em>
+                    </MenuItem>
+                    <MenuItem value="French">
+                        <em>French</em>
+                    </MenuItem>
+                    <MenuItem value="Hindi">
+                        <em>Hindi</em>
+                    </MenuItem>
+                    <MenuItem value="Spanish">
+                        <em>Spanish</em>
+                    </MenuItem>
+                </Select>
+            </FormControl>
+             <FormControl className={classes.wideFormControl}>
+                <InputLabel htmlFor="employee-simple">Language Restrictions</InputLabel>
+                <Select
+                    value={this.state.language}
+                    onChange={this.handleEmployeeChange}
+                    inputProps={{
+                        name: 'employee',
+                        id: 'employee-simple'
+                    }}>
+                    <MenuItem value="">
+                        <em>None</em>
+                    </MenuItem>
+                    <MenuItem value="Chinese">
+                        <em>Chinese</em>
+                    </MenuItem>
+                    <MenuItem value="French">
+                        <em>French</em>
+                    </MenuItem>
+                    <MenuItem value="Hindi">
+                        <em>Hindi</em>
+                    </MenuItem>
+                    <MenuItem value="Spanish">
+                        <em>Spanish</em>
+                    </MenuItem>
+                </Select>
+            </FormControl>
             <Button variant="contained" color="primary" onClick={this.onSubmit } className={classes.button}>
                 Voice Assistant
             </Button>

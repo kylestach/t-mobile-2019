@@ -63,7 +63,7 @@ def getArticles(keywords):
     return newList1
 
 
-def parseResuts(text):
+def parseRecuests(text):
     return getArticles(extract_query(text))
 
 
