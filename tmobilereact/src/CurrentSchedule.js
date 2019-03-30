@@ -62,11 +62,29 @@ class CurrentSchedule extends React.Component {
         const {classes} = this.props;
         const {events, employees} = this.state;
 
-        const start = new Date();
-        start.setHours(3, 0, 0, 0);
+        let start, end;
+        if (events.length === 0) {
+            start = new Date();
+            start.setHours(9, 0, 0, 0);
+            end = new Date();
+            end.setHours(17, 0, 0, 0);
+        } else {
+            start = events[0].start;
+            end = events[0].end;
 
-        const end = new Date();
-        end.setHours(17, 0, 0, 0);
+            for (let event of events) {
+                if (event.start < start) {
+                    start = event.start;
+                }
+
+                if (event.end > end) {
+                    end = event.end;
+                }
+            }
+
+            start = new Date((+start) - 5 * 60 * 1000);
+            end = new Date((+end) + 5 * 60 * 1000);
+        }
 
         return (
             <div className={classes.root}>

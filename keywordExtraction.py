@@ -2,13 +2,14 @@ import json
 import string
 from bs4 import BeautifulSoup
 import sys
-from rake_nltk import Rake
+from nltk.corpus import stopwords
 
 # Uses stopwords for english from NLTK, and all punctuation characters by
 # default
 
 keywords = {}
 references = {}
+word_list = ""
 
 
 def get_html(name):
@@ -17,8 +18,8 @@ def get_html(name):
     return html
 
 
-def load_dict_json():
-    with open('dict.json', 'r') as file:
+def load_dict_json(path):
+    with open(path, 'r') as file:
         references = json.load(file)
     file.close()
     return references
@@ -55,26 +56,35 @@ def extract_dictionary(text):
     for word in words:
         word = word.strip()
         word = word.lower()
-        if word and len(word) < 20:
+        if word and len(word) < 20 and word not in stopwords.words('english'):
             if word not in keywords:
                 keywords[word] = 0
             else:
                 keywords[word] += 1
 
 
-def extract_keywords(text):
-    r = Rake()
-    r.extract_keywords_from_text(text)
-    return r.get_ranked_phrases_with_scores()
+def extract_query(text):
+    """Extracts search query from text"""
+    allowed = load_dict_json('wordVectorData/titles_cleaned.json')
+    query = []
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    words = text.split(' ')
+    for word in words:
+        if word in allowed:
+            query += [word]
+
+    return query
 
 
 def clean_dictionary():
-    item = load_dict_json()
+    item = load_dict_json('wordVectorData/dict.json')
+    words = ""
     for name in item.keys():
         if item[name] > 100:
             keywords[name] = item[name]
 
-    save_dict_json('dict_100.json')
+    save_dict_json('wordVectorData/dict_100.json')
+
 
 
  # Extraction given the text.
@@ -88,13 +98,17 @@ def clean_dictionary():
 # r.get_ranked_phrases_with_scores()
 
 
-if len(sys.argv) > 1 and sys.argv[1] is str:
-    print(extract_keywords(sys.argv[1]))
+if len(sys.argv) > 1:
+    print(extract_query(sys.argv[1]))
 
 # get_reference_titles()
 # for name, description in references.items():
-#     extract_dictionary(get_reference_article_text(name))
+#     # extract_dictionary(get_reference_article_text(name))
 #     extract_dictionary(description)
 #
-# save_dict_json('dict.json')
-clean_dictionary()
+# with open("wordVectorData/dictionary.txt", 'w') as file:
+#     for item in keywords.keys():
+#         file.write("%s," % item)
+# file.close()
+# save_dict_json('wordVectorData/titles_cleaned.json')
+# clean_dictionary()
