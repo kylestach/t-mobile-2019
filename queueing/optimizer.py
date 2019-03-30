@@ -7,19 +7,23 @@ K = 1.0
 
 class Task:
     def __init__(self,
+                 task_name,
+                 customer_name,
                  time_to_complete,
                  checkin_time=None,
                  online_time=None,
-                 language="english"):
+                 constraints={"language": "english"}):
+        self.task_name = task_name
+        self.customer_name = customer_name
         self.time_to_complete = time_to_complete
         self.checkin_time = checkin_time
         self.online_time = online_time
-        self.language = language
+        self.constraints = constraints
 
     def eval_cost(self, worker, time, now_time):
         zeta = None
         target_time = None
-        if self.language not in worker.languages:
+        if not worker.matches_hard_constraints(self.constraints):
             return float('inf')
 
         if self.online_time is not None:
@@ -35,14 +39,28 @@ class Task:
         return time_err * (time_err + zeta)
 
     def __repr__(self):
-        return "%s" % self.time_to_complete
+        return "%s: %s" % (self.task_name, self.time_to_complete)
 
 
 class Worker:
-    def __init__(self, name, languages, current_task_end):
+    def __init__(self, name, current_task_end,
+                 default_proficiency=1, task_proficiencies={},
+                 constraint_props={"language": ["english"]}):
         self.name = name
-        self.languages = languages
         self.current_task_end = current_task_end
+        self.default_proficiency = default_proficiency
+        self.task_proficiencies = task_proficiencies
+        self.constraint_props = constraint_props
+        self.constraint_props["name"] = [self.name]
+
+    def score(self, task_name):
+        return self.task_proficiencies[task_name] if task_name in self.task_proficiencies else self.default_proficiency
+
+    def matches_hard_constraints(self, constraints):
+        for key in constraints.keys():
+            if key not in self.constraint_props or constraints[key] not in self.constraint_props[key]:
+                return False
+        return True
 
 
 class Schedule:
@@ -59,7 +77,7 @@ class Schedule:
                 if task.online_time is not None and schedule_time < task.online_time:
                     schedule_time = task.online_time
                 cost += task.eval_cost(worker, schedule_time, now_time)
-                schedule_time += task.time_to_complete
+                schedule_time += task.time_to_complete / worker.score(task.task_name)
             cost += schedule_time ** 2
         return cost
 
@@ -98,14 +116,13 @@ def optimize_schedule(tasks, reps, now_time):
     best_so_far = schedule
     best_cost = best_so_far.eval_cost(now_time)
 
-    num_iterations = 1000
+    num_iterations = 10000
     prev_cost = schedule.eval_cost(now_time)
 
     for i in range(num_iterations):
         T = 0.9999 ** i
-        next_neighbor = schedule.gen_neighbor(int(max(1, len(tasks) * T)))
+        next_neighbor = schedule.gen_neighbor(random.randint(1, int(len(tasks) / 2 + 0.5)))
         new_cost = next_neighbor.eval_cost(now_time)
-        # print(new_cost, prev_cost)
         if new_cost < prev_cost or math.exp(-1e-3 * (new_cost - prev_cost) / T) >= random.random():
             schedule = next_neighbor
             prev_cost = new_cost
@@ -117,11 +134,13 @@ def optimize_schedule(tasks, reps, now_time):
     print(best_cost, best_so_far.rep_assignments)
 
 def main():
-    tasks = [Task(15, 0), Task(10, 0), Task(50, 0), Task(30, 0), Task(30, 0), Task(25, 0), Task(31, None, 25, "spanish")]
+    # tasks = [Task(15, 0), Task(10, 0), Task(50, 0), Task(30, 0), Task(30, 0), Task(25, 0), Task(31, None, 25, "spanish")]
+    tasks = [Task("sim", "bob", 25, 0)] * 30 + [Task("sell", "alice", 60, 0)] * 15 + [Task("THING C", "eve", 30, None, 30, {"language": "spanish"})]
+    random.shuffle(tasks)
     reps = [
-        Worker("A", ["english"], 0),
-        Worker("B", ["english"], 0),
-        Worker("C", ["english", "spanish"], 0)]
+        Worker("A", 0, task_proficiencies={"sim": 1.5}),
+        Worker("B", 0, task_proficiencies={"sell": 1.3}),
+        Worker("C", 0, constraint_props={"language": ["english", "spanish"]})]
     optimize_schedule(tasks, reps, 0)
 
 if __name__ == '__main__':
