@@ -82,7 +82,7 @@ const styles = theme => ({
   },
   formControl: {
     margin: theme.spacing.unit,
-    minWidth: 120,
+    minWidth: 300, // 120
     maxWidth: 300
   },
   wideFormControl: {
@@ -291,8 +291,8 @@ class AddToQueue extends React.Component {
                 language: this.state.language,
                 employee: this.state.selectedEmployeeId,
                 task_name: this.state.task_name,
-                  customer_name: (this.state.firstName + ' ' + this.state.lastName).trim(),
-                  phone: this.state.phone,
+                  customer_name: (this.customerFirstName + ' ' + this.customerLastName).trim(),
+                  phone: this.customerPhone,
               })
             }).then(resp => {
               //    make sure no error happened
@@ -310,7 +310,7 @@ class AddToQueue extends React.Component {
     console.log(this.state);
 
     return (
-      <div>
+      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
         <FormControl className={classes.formControl}>
           <InputLabel htmlFor="appointment-simple">Appointment</InputLabel>
           <Select
@@ -334,7 +334,7 @@ class AddToQueue extends React.Component {
         <TextField
           id="first-name"
           label="First Name"
-          className={classes.textField}
+          className={classes.formControl}
           value={this.customerFirstName}
           onChange={this.handleTextChange("firstName")}
           disabled={this.isAppointment}
@@ -343,7 +343,7 @@ class AddToQueue extends React.Component {
         <TextField
           id="last-name"
           label="Last Name"
-          className={classes.textField}
+          className={classes.formControl}
           value={this.customerLastName}
           onChange={this.handleTextChange("lastName")}
           disabled={this.isAppointment}
@@ -359,7 +359,7 @@ class AddToQueue extends React.Component {
             disabled={this.isAppointment}
           />
         </FormControl>
-        <FormControl className={classes.wideFormControl}>
+        <FormControl className={classes.formControl}>
           <InputLabel htmlFor="employee-simple">Assign to Employee</InputLabel>
           <Select
             value={this.state.selectedEmployeeId}
@@ -379,7 +379,7 @@ class AddToQueue extends React.Component {
             ))}
           </Select>
         </FormControl>
-        <FormControl>
+        <FormControl className={classes.formControl}>
           <InputLabel htmlFor="u-simple">Issues</InputLabel>
           <Select
             value={this.state.task_name}
@@ -431,7 +431,7 @@ class AddToQueue extends React.Component {
 
           </Select>
         </FormControl>
-        <FormControl className={classes.wideFormControl}>
+        <FormControl className={classes.formControl}>
           <InputLabel htmlFor="employee-simple">
             Language Restrictions
           </InputLabel>
@@ -464,9 +464,9 @@ class AddToQueue extends React.Component {
           variant="contained"
           color="primary"
           onClick={this.onSubmit}
-          className={classes.button}
+          className={classes.formControl}
         >
-          {this.state.isChrome ? "Voice Assistant" :" Submit" }
+          {this.state.isChrome ? 'Voice Assistant' : 'Add Customer'}
         </Button>
       </div>
     );

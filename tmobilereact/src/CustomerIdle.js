@@ -16,6 +16,8 @@ const styles = theme => ({
     root: {
         position: 'relative',
         height: '100%',
+        padding: theme.spacing.unit,
+        textAlign: 'center'
     },
     navigator: {
         position: 'fixed',
@@ -95,13 +97,14 @@ class CustomerIdle extends React.Component {
     }
 
     render() {
+        const { classes } = this.props;
         console.log(this.props.employeeSchedule);
 
         if (!this.props.employeeSchedule) {
             return <Typography>Loading...</Typography>;
         }
 
-        return (<div>
+        return (<div className={classes.root}>
             <Typography>{this.queueStatusMessage}</Typography>
             <Button variant="contained" color="primary" onClick={this.onLoadNextCustomer} disabled={!this.canDequeueCustomer}>Next Customer</Button>
         </div>);
