@@ -9,6 +9,8 @@ tasks = []
 workers = []
 current_schedule = optimizer.Schedule({})
 
+alpha = 1e-2
+
 task_times = {
     'coverage': 30,
     'problem': 40,
@@ -54,10 +56,37 @@ def pull_latest_task(my_uuid):
     worker = worker[0]
     task = current_schedule.rep_assignments[worker][0]
     tasks = [t for t in tasks if str(t.uuid) != str(task.uuid)]
+    complete_task(my_uuid)
     worker.current_task = task
     worker.current_task_end = time.time() // 60 + task.time_to_complete
     update_schedule()
     response = jsonify(task.serialize())
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+
+@app.route("/complete_task", methods=['POST'])
+def complete_task_stub():
+    complete_task(request.get_json()['uuid'])
+    response = jsonify(success=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+
+def complete_task(my_uuid):
+    worker = [w for w in workers if str(w.uuid) == str(my_uuid)]
+    if not worker or not worker[0].current_task:
+        response = jsonify(success=False)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+    worker = worker[0]
+    time_to_complete = max(1, time.time() // 60 - (
+        worker.current_task_end - worker.current_task.time_to_complete))
+    ratio = worker.current_task.time_to_complete / time_to_complete
+    previous_proficiency = worker.task_proficiencies[worker.current_task.task_name] if worker.current_task.task_name in worker.task_proficiencies else worker.default_proficiency
+    worker.task_proficiencies[worker.current_task.task_name] = (1 - alpha) * previous_proficiency + alpha * ratio
+    if worker.current_task:
+        worker.current_task = None
+    response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
