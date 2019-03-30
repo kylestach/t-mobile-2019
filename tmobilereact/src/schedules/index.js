@@ -33,10 +33,12 @@
   }
 ]
  */
+import App from "../App";
+
 export class Employee {
     id;
     name;
-
+    active;
     currentTaskEnd;
     currentTaskEndRaw;
 
@@ -51,7 +53,7 @@ export class Employee {
             obj.currentTaskEnd = null;
             obj.currentTaskEndRaw = null;
         }
-
+        obj.active = raw.active;
         return obj;
     }
 
@@ -138,7 +140,22 @@ export async function getEmployees() {
 
     return data.map(Employee.fromJSON);
 }
-
+export async function activateEmployee(e) {
+  const response = await fetch('http://13.68.142.20/activate_rep',{
+    method:"POST",body:JSON.stringify({uuid:e.id})
+  });
+  if (!response.ok) {
+      throw new Error("HTTP error, status = " + response.status);
+  }
+}
+export async function deactivateEmployee(e) {
+  const response = await fetch('http://13.68.142.20/deactivate_rep',{
+    method:"POST",body:JSON.stringify({uuid:e.id})
+  });
+  if (!response.ok) {
+      throw new Error("HTTP error, status = " + response.status);
+  }
+}
 export async function getSchedule() {
     const employees = await getEmployees();
 
@@ -174,7 +191,7 @@ export async function getSchedule() {
                 event.start = nextAvailable;
             }
             event.end = event.start + event.time_to_complete;
-            nextAvailable = event.end;
+            nextAvailable = event.end + 2;
             event.employee_id = eId;
 
             events.push(ScheduleItem.fromJSON(event));
@@ -183,4 +200,56 @@ export async function getSchedule() {
 
 
     return { employees, events };
+}
+
+/*
+{
+    "checkin_time": null,
+    "constraints": {
+      "language": "english"
+    },
+    "customer_name": "Ananth",
+    "name": "coverage",
+    "online_time": 25899100,
+    "time_to_complete": 30,
+    "uuid": "2"
+  }
+ */
+
+export class Appointment {
+    id;
+    name;
+    category;
+    appointmentTime;
+
+    static fromJSON(raw) {
+        const obj = new Appointment();
+        obj.id = raw.uuid;
+        obj.name = raw.customer_name;
+        obj.category = raw.name;
+        obj.appointmentTime = new Date(raw.online_time * 60000);
+        return obj;
+    }
+
+    get firstName() {
+        const parts = this.name.split(" ");
+        return parts[0];
+    }
+
+    get lastName() {
+        const parts = this.name.split(" ");
+        parts.shift();
+        return parts.join(' ');
+    }
+
+}
+
+export async function getAppointment() {
+    const response = await fetch('http://13.68.142.20/get_appointments');
+    if (!response.ok) {
+        throw new Error("HTTP error, status = " + response.status);
+    }
+    const data = await response.json();
+
+    return data.map(Appointment.fromJSON);
 }

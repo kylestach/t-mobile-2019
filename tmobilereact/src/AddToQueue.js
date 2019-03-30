@@ -20,7 +20,7 @@
  */
 
 import PropTypes from "prop-types";
-import {withStyles} from "@material-ui/core";
+import {Typography, withStyles} from "@material-ui/core";
 import React from "react";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -29,6 +29,10 @@ import MenuItem from "@material-ui/core/MenuItem";
 import TextField from "@material-ui/core/TextField";
 import MaskedInput from "react-text-mask";
 import Input from "@material-ui/core/Input";
+import {getAppointment, getEmployees} from "./schedules";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Checkbox from "@material-ui/core/Checkbox";
+import Button from "@material-ui/core/Button";
 
 function TextMaskCustom(props) {
     const { inputRef, ...other } = props;
@@ -66,6 +70,14 @@ const styles = theme => ({
         minWidth: 120,
         maxWidth: 300,
     },
+    wideFormControl: {
+        margin: theme.spacing.unit,
+        minWidth: 300,
+        maxWidth: 600,
+    },
+    button: {
+        margin: theme.spacing.unit,
+    },
     textField: {
         marginLeft: theme.spacing.unit,
         marginRight: theme.spacing.unit,
@@ -91,14 +103,34 @@ const appointments = [
 
 class AddToQueue extends React.Component {
     state = {
-        selectedAppointmentId: "",
+        selectedAppointmentId: "", // id in appointments[], not id of object
         firstName: "",
         lastName: "",
         phone: "",
+        employees: [],
+        appointments: [],
+        selectedEmployeeId: "",
     };
+
+    constructor() {
+        super();
+
+        getEmployees().then(employees => {
+            this.setState({ employees })
+        }).catch(console.error);
+
+        getAppointment().then(appointments => {
+            this.setState({ appointments })
+        }).catch(console.error);
+
+    }
 
     handleChange = (e, value) => {
         this.setState({selectedAppointmentId: e.target.value});
+    };
+
+    handleEmployeeChange = (e, value) => {
+        this.setState({selectedEmployeeId: e.target.value});
     };
 
     handleTextChange = (key) => {
@@ -108,20 +140,34 @@ class AddToQueue extends React.Component {
     };
 
     get isAppointment() {
-        return this.state.selectedAppointmentId !== "" && appointments[this.state.selectedAppointmentId];
+        return this.state.selectedAppointmentId !== "" && this.state.appointments[this.state.selectedAppointmentId];
+    }
+
+    get currentAppointment() {
+        return this.isAppointment ? this.state.appointments[this.state.selectedAppointmentId] : null;
     }
 
     get customerFirstName() {
-        return this.isAppointment ? appointments[this.state.selectedAppointmentId].firstName : this.state.firstName;
+        return this.isAppointment ? this.currentAppointment.firstName : this.state.firstName;
     }
 
     get customerLastName() {
-        return this.isAppointment ? "Appt Last" : this.state.lastName;
+        return this.isAppointment ? this.currentAppointment.lastName : this.state.lastName;
     }
 
     get customerPhone() {
-        return this.isAppointment ? "(911)-911-0000" : this.state.phone;
+        return this.isAppointment ? '(111)-222-3333' : this.state.phone;
     }
+
+    handleCheckChange = (key) => {
+        return (el) => {
+            this.setState({[key]: el.target.checked});
+        }
+    };
+
+    onSubmit = () => {
+        console.log('BIG Click!');
+    };
 
     render() {
         const {classes} = this.props;
@@ -141,7 +187,7 @@ class AddToQueue extends React.Component {
                     <MenuItem value="">
                         <em>None</em>
                     </MenuItem>
-                    {appointments.map(item => (<MenuItem key={item.id} value={item.id}>{item.firstName + ' ' + item.lastName}</MenuItem>))}
+                    {this.state.appointments.map((item, i) => (<MenuItem key={item.id} value={i}>{item.firstName + ' ' + item.lastName}</MenuItem>))}
                 </Select>
             </FormControl>
             <TextField
@@ -172,7 +218,58 @@ class AddToQueue extends React.Component {
                     disabled={this.isAppointment}
                 />
             </FormControl>
-
+            <FormControl className={classes.wideFormControl}>
+                <InputLabel htmlFor="employee-simple">Assign to Employee</InputLabel>
+                <Select
+                    value={this.state.selectedEmployeeId}
+                    onChange={this.handleEmployeeChange}
+                    inputProps={{
+                        name: 'employee',
+                        id: 'employee-simple'
+                    }}>
+                    <MenuItem value="">
+                        <em>None</em>
+                    </MenuItem>
+                    {this.state.employees.map(item => (<MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>))}
+                </Select>
+            </FormControl>
+            <div>
+                <Typography>Issue</Typography>
+                <FormControlLabel
+                    control={<Checkbox checked={this.state.gilad || false} onChange={this.handleCheckChange('gilad')} value="gilad" />}
+                    label="SIM"
+                />
+                <FormControlLabel
+                    control={<Checkbox checked={this.state.jason || false} onChange={this.handleCheckChange('jason')} value="jason" />}
+                    label="Issue 2"
+                />
+                <FormControlLabel
+                    control={
+                        <Checkbox checked={this.state.antoine || false} onChange={this.handleCheckChange('antoine')} value="antoine" />
+                    }
+                    label="Issue 3"
+                />
+                <FormControlLabel
+                    control={
+                        <Checkbox checked={this.state.antoine || false} onChange={this.handleCheckChange('antoine')} value="antoine" />
+                    }
+                    label="Issue 4"
+                />
+            </div>
+            <div>
+                <Typography>Restrictions</Typography>
+                <FormControlLabel
+                    control={<Checkbox checked={this.state.spanish || false} onChange={this.handleCheckChange('spanish')} value="spanish" />}
+                    label="Spanish Language"
+                />
+                <FormControlLabel
+                    control={<Checkbox checked={this.state.solaris || false} onChange={this.handleCheckChange('solaris')} value="solaris" />}
+                    label="Solaris Expert"
+                />
+            </div>
+            <Button variant="contained" color="primary" onClick={this.onSubmit} className={classes.button}>
+                Primary
+            </Button>
         </div>);
     }
 
