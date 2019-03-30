@@ -17,12 +17,14 @@ class Task:
     def __init__(self,
                  task_name,
                  customer_name,
+                 customer_phone,
                  time_to_complete,
                  checkin_time=None,
                  online_time=None,
                  constraints={"language": "english"}):
         self.task_name = task_name
         self.customer_name = customer_name
+        self.customer_phone = customer_phone
         self.time_to_complete = time_to_complete
         self.checkin_time = checkin_time
         self.online_time = online_time
@@ -60,6 +62,7 @@ class Task:
             "online_time": self.online_time,
             "uuid": self.uuid,
             "constraints": self.constraints,
+            "phone": self.customer_phone
         }
 
     def __repr__(self):

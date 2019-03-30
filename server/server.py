@@ -97,6 +97,7 @@ def schedule_appointment():
     tasks.append(optimizer.Task(
         request.get_json()['task_name'],
         request.get_json()['customer_name'],
+        request.get_json()['phone'] if 'phone' in request.get_json() else '',
         task_times[request.get_json()['task_name']],
         None,
         request.get_json()['time'],
@@ -117,6 +118,7 @@ def add_task():
     tasks.append(optimizer.Task(
         request.get_json()['task_name'],
         request.get_json()['customer_name'],
+        request.get_json()['phone'] if 'phone' in request.get_json() else '',
         task_times[request.get_json()['task_name']],
         time.time() // 60,
         None,
