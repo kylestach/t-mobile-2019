@@ -36,6 +36,8 @@ def add_worker():
         request.get_json()['name'],
         time.time() // 60
     ))
+    if 'languages' in request.get_json():
+        workers[-1].constraint_props['language'] = request.get_json()['languages']
     update_schedule()
     response = jsonify(success=True)
     response.headers.add('Access-Control-Allow-Origin', '*')

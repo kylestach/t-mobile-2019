@@ -189,18 +189,116 @@ def optimize_schedule(tasks, reps, now_time):
             best_so_far = schedule
             best_cost = new_cost
 
-    print("Optimization finished with cost %s" % best_cost)
+    # print("Optimization finished with cost %s" % best_cost)
     return best_so_far
 
+def simulate_random_tasks(N):
+    tasks = []
+    in_progress = [None, None, None]
+    queue = []
+    times = [5] * 10 + [10] * 6 + [15] * 4 + [20] * 2 + [30, 45, 60]
+    t = 0
+    wait_times = []
+    for i in range(N):
+        if random.random() < 0.4:
+            queue.append(Task(str(i), 'a', "", random.choice(times), t))
+        for i in range(len(in_progress)):
+            if in_progress[i] and in_progress[i][0] + in_progress[i][1].time_to_complete <= t:
+                in_progress[i] = None
+
+            if not in_progress[i]:
+                if queue:
+                    in_progress[i] = (t, queue[0])
+                    wait_times.append(t - in_progress[i][1].checkin_time)
+                    queue = queue[1:]
+        # Check in a new task
+        t += 1
+
+    while queue or in_progress[0] or in_progress[1] or in_progress[1]:
+        for i in range(len(in_progress)):
+            if in_progress[i] and in_progress[i][0] + in_progress[i][1].time_to_complete <= t:
+                in_progress[i] = None
+
+            if not in_progress[i]:
+                if queue:
+                    in_progress[i] = (t, queue[0])
+                    wait_times.append(t - in_progress[i][1].checkin_time)
+                    queue = queue[1:]
+        # Check in a new task
+        t += 1
+    # print("Median: %s" % sorted(wait_times)[len(wait_times)//2])
+    # print("Mean: %s" % (sum(wait_times)/len(wait_times)))
+    wait_times.sort()
+    if len(wait_times) > 2:
+        print("%s, %s" % (N, wait_times[len(wait_times)//2]))
+
+def simulate_random_tasks_enhanced(N):
+    in_progress = [None, None, None]
+    tasks = []
+    times = [5] * 10 + [10] * 6 + [15] * 4 + [20] * 2 + [30, 45, 60]
+    t = 0
+    wait_times = []
+    reps = [Worker("a", 0), Worker("b", 0), Worker("c", 0)]
+    for r in reps:
+        r.active = True
+
+    for i in range(N):
+        if random.random() < 0.4:
+            tasks.append(Task(str(i), 'a', "", random.choice(times), t))
+        for i in range(len(in_progress)):
+            if in_progress[i] and in_progress[i][0] + in_progress[i][1].time_to_complete <= t:
+                in_progress[i] = None
+
+            if not in_progress[i]:
+                if tasks:
+                    schedule = optimize_schedule(tasks, reps, t)
+                    if schedule.rep_assignments[reps[i]]:
+                        task = schedule.rep_assignments[reps[i]][0]
+                        in_progress[i] = (t, task)
+                        tasks = [t for t in tasks if t.uuid != task.uuid]
+                        wait_times.append(t - in_progress[i][1].checkin_time)
+        # Check in a new task
+        t += 1
+
+    while tasks or in_progress[0] or in_progress[1] or in_progress[1]:
+        for i in range(len(in_progress)):
+            if in_progress[i] and in_progress[i][0] + in_progress[i][1].time_to_complete <= t:
+                in_progress[i] = None
+
+            if not in_progress[i]:
+                if tasks:
+                    schedule = optimize_schedule(tasks, reps, t)
+                    if schedule.rep_assignments[reps[i]]:
+                        task = schedule.rep_assignments[reps[i]][0]
+                        in_progress[i] = (t, task)
+                        tasks = [t for t in tasks if t.uuid != task.uuid]
+                        wait_times.append(t - in_progress[i][1].checkin_time)
+        # Check in a new task
+        t += 1
+    # print("Median: %s for %s tasks" % (sorted(wait_times)[len(wait_times)//2], i))
+    # print("Mean: %s for %s tasks" % (sum(wait_times)/len(wait_times), i))
+    wait_times.sort()
+    if len(wait_times) > 2:
+        print("%s, %s" % (N, wait_times[len(wait_times)//2]))
+
 def main():
+    for i in range(50, 100):
+        for _ in range(3):
+            simulate_random_tasks(i)
+    print('-------------')
+    for i in range(50, 100):
+        for _ in range(3):
+            simulate_random_tasks_enhanced(i)
     # tasks = [Task(15, 0), Task(10, 0), Task(50, 0), Task(30, 0), Task(30, 0), Task(25, 0), Task(31, None, 25, "spanish")]
-    tasks = [Task("sim", "bob", 25, 0)] * 30 + [Task("sell", "alice", 60, 0)] * 15 + [Task("THING C", "eve", 30, None, 15, constraints={"language": "spanish"})]
+    tasks = [Task("sim", "bob", "", 25, 0)] * 30 + [Task("sell", "alice", "", 60, 0)] * 15 + [Task("THING C", "eve", "", 30, 0, 15, constraints={"language": "spanish"})]
     random.shuffle(tasks)
     reps = [
         Worker("A", 0, task_proficiencies={"sim": 1.5}),
         Worker("B", 0, task_proficiencies={"sell": 1.3}),
         Worker("C", 0, constraint_props={"language": ["english", "spanish"]})]
-    optimize_schedule(tasks, reps, 40.)
+    for r in reps:
+        r.active = True
+    print(optimize_schedule(tasks, reps, 40.).rep_assignments)
 
 if __name__ == '__main__':
     main()
