@@ -30,10 +30,7 @@ import TextField from "@material-ui/core/TextField";
 import MaskedInput from "react-text-mask";
 import Input from "@material-ui/core/Input";
 import { getAppointment, getEmployees } from "./schedules";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
-
 function TextMaskCustom(props) {
   const { inputRef, ...other } = props;
 
@@ -82,7 +79,7 @@ const styles = theme => ({
   },
   formControl: {
     margin: theme.spacing.unit,
-    minWidth: 300, // 120
+    minWidth: 300,
     maxWidth: 300
   },
   wideFormControl: {
@@ -134,7 +131,7 @@ const appointments = [
   }
 ];
 
-class AddToQueue extends React.Component {
+class Appointments extends React.Component {
   state = {
     selectedAppointmentId: "", // id in appointments[], not id of object
     firstName: "",
@@ -143,12 +140,11 @@ class AddToQueue extends React.Component {
     employees: [],
     appointments: [],
     selectedEmployeeId: "",
-      language: 'english',
     isRecording: true,
     recognition: window.SpeechRecognition,
     finalTranscript: "",
     task_name: "",
-    isChrome: false
+    appointment: ""
   };
 
   constructor() {
@@ -165,7 +161,7 @@ class AddToQueue extends React.Component {
         this.setState({ appointments });
       })
       .catch(console.error);
-    //this.state.isChrome = !!window.chrome && !!window.chrome.webstore;
+    this.state.isChrome = !!window.chrome && !!window.chrome.webstore;
     if (this.state.isChrome) {
       window.SpeechRecognition =
         window.webkitSpeechRecognition || window.SpeechRecognition;
@@ -251,48 +247,21 @@ class AddToQueue extends React.Component {
 
   onSubmit = () => {
     console.log(this.state.isRecording ? "listening" : "stopped listening");
-    this.setState({ isRecording: !this.state.isRecording });
-    if(this.state.isChrome){
-        if (this.state.isRecording) {
-            this.state.recognition.start();
-          } else {
-            this.state.recognition.stop();
-            //    MAKE CALL TO GET THE LINKS
-            fetch("http://13.68.142.20/add_task", {
+
+    const apptTime = new Date();
+
+        fetch("http://13.68.142.20/schedule_appointment", {
               method: "POST",
               headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                speech: this.state.finalTranscript,
+                time: (+apptTime) / 60000,
                 language: this.state.language,
                 employee: this.state.employee_id,
-                task_name: this.state.task_name
-              })
-            }).then(resp => {
-              //    make sure no error happened
-              if (!resp.ok) {
-                throw new Error("HTTP error, status = " + resp.status);
-              }
-            });
-            this.setState({ finalTranscript: "" });
-          }
-    }
-    else{
-        fetch("http://13.68.142.20/add_task", {
-              method: "POST",
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                speech: null,
-                language: this.state.language,
-                employee: this.state.selectedEmployeeId,
                 task_name: this.state.task_name,
-                  customer_name: (this.customerFirstName + ' ' + this.customerLastName).trim(),
-                  phone: this.customerPhone,
+                customer_name: (this.customerFirstName + ' ' + this.customerLastName).trim(),
               })
             }).then(resp => {
               //    make sure no error happened
@@ -300,8 +269,7 @@ class AddToQueue extends React.Component {
                 throw new Error("HTTP error, status = " + resp.status);
               }
             });
-            this.setState({ finalTranscript: "" });
-    }
+
   };
 
   render() {
@@ -310,31 +278,21 @@ class AddToQueue extends React.Component {
     console.log(this.state);
 
     return (
-      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-        <FormControl className={classes.formControl}>
-          <InputLabel htmlFor="appointment-simple">Appointment</InputLabel>
-          <Select
-            value={this.state.selectedAppointmentId}
-            onChange={this.handleChange}
-            inputProps={{
-              name: "appointment",
-              id: "appointment-simple"
-            }}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {this.state.appointments.map((item, i) => (
-              <MenuItem key={item.id} value={i}>
-                {item.firstName + " " + item.lastName}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      <div>
+        
+        <TextField
+          id="time"
+          label="Appointment Time"
+          className={classes.textField}
+          value={this.state.appointment}
+          onChange={this.handleTextChange("appointment")}
+          disabled={this.isAppointment}
+          margin="normal"
+        />
         <TextField
           id="first-name"
           label="First Name"
-          className={classes.formControl}
+          className={classes.textField}
           value={this.customerFirstName}
           onChange={this.handleTextChange("firstName")}
           disabled={this.isAppointment}
@@ -343,7 +301,7 @@ class AddToQueue extends React.Component {
         <TextField
           id="last-name"
           label="Last Name"
-          className={classes.formControl}
+          className={classes.textField}
           value={this.customerLastName}
           onChange={this.handleTextChange("lastName")}
           disabled={this.isAppointment}
@@ -359,27 +317,8 @@ class AddToQueue extends React.Component {
             disabled={this.isAppointment}
           />
         </FormControl>
-        <FormControl className={classes.formControl}>
-          <InputLabel htmlFor="employee-simple">Assign to Employee</InputLabel>
-          <Select
-            value={this.state.selectedEmployeeId}
-            onChange={this.handleEmployeeChange}
-            inputProps={{
-              name: "employee",
-              id: "employee-simple"
-            }}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {this.state.employees.map(item => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl className={classes.formControl}>
+        
+        <FormControl>
           <InputLabel htmlFor="u-simple">Issues</InputLabel>
           <Select
             value={this.state.task_name}
@@ -428,53 +367,24 @@ class AddToQueue extends React.Component {
               <MenuItem value="t_mobile_tuesdays">
                     T-Mobile Tuesdays
               </MenuItem>
-
           </Select>
         </FormControl>
-        <FormControl className={classes.formControl}>
-          <InputLabel htmlFor="employee-simple">
-            Language Restrictions
-          </InputLabel>
-          <Select
-            value={this.state.language}
-            onChange={this.handleEmployeeChange}
-            inputProps={{
-              name: "employee",
-              id: "employee-simple"
-            }}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            <MenuItem value="Chinese">
-              <em>Chinese</em>
-            </MenuItem>
-            <MenuItem value="French">
-              <em>French</em>
-            </MenuItem>
-            <MenuItem value="Hindi">
-              <em>Hindi</em>
-            </MenuItem>
-            <MenuItem value="Spanish">
-              <em>Spanish</em>
-            </MenuItem>
-          </Select>
-        </FormControl>
+        
         <Button
           variant="contained"
           color="primary"
           onClick={this.onSubmit}
-          className={classes.formControl}
+          className={classes.button}
         >
-          {this.state.isChrome ? 'Voice Assistant' : 'Add Customer'}
+         Schedule
         </Button>
       </div>
     );
   }
 }
 
-AddToQueue.propTypes = {
+Appointments.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(AddToQueue);
+export default withStyles(styles)(Appointments);

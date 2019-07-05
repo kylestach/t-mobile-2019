@@ -1,6 +1,7 @@
 import requests
 import sys
 import json
+from keywordExtraction import extract_query
 
 class Link:
     def __init__(self, name, desc, link):
@@ -59,7 +60,12 @@ def getArticles(keywords):
     #print(newList2)
     for i in newList2:
         newList1.append(i)
-    return newList1    
+    return newList1
+
+
+def parseRecuests(text):
+    return getArticles(extract_query(text))
+
 
 if __name__ == '__main__':
     print(str(getArticles(sys.argv[1:])))
